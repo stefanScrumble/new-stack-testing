@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Data\UserData;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,70 +19,63 @@ class UserController extends Controller
 {
     public function index(): Response
     {
+        $users = QueryBuilder::for(
+            User::query()
+                ->select(['id', 'name', 'email', 'email_verified_at', 'created_at'])
+                ->withCount(['posts', 'comments']),
+        )
+            ->allowedSorts([
+                'id',
+                'name',
+                'email',
+                'email_verified_at',
+                'created_at',
+                'posts_count',
+                'comments_count',
+            ])
+            ->allowedFilters([
+                AllowedFilter::exact('id'),
+                AllowedFilter::partial('name'),
+                AllowedFilter::partial('email'),
+                AllowedFilter::callback('email_verified_at', function (Builder $query, mixed $value): void {
+                    if ($value === 'verified') {
+                        $query->whereNotNull('email_verified_at');
+
+                        return;
+                    }
+
+                    if ($value === 'unverified') {
+                        $query->whereNull('email_verified_at');
+
+                        return;
+                    }
+
+                    if ($value) {
+                        $query->whereDate('email_verified_at', $value);
+                    }
+                }),
+                AllowedFilter::callback('created_at', function (Builder $query, mixed $value): void {
+                    if ($value) {
+                        $query->whereDate('created_at', $value);
+                    }
+                }),
+                AllowedFilter::callback('posts_count', function (Builder $query, mixed $value): void {
+                    if ($value !== null && $value !== '') {
+                        $query->has('posts', '=', (int) $value);
+                    }
+                }),
+                AllowedFilter::callback('comments_count', function (Builder $query, mixed $value): void {
+                    if ($value !== null && $value !== '') {
+                        $query->has('comments', '=', (int) $value);
+                    }
+                }),
+            ])
+            ->defaultSort('id')
+            ->paginate(10)
+            ->withQueryString();
+
         return Inertia::render('users/index', [
-            'users' => QueryBuilder::for(
-                User::query()
-                    ->select(['id', 'name', 'email', 'email_verified_at', 'created_at'])
-                    ->withCount(['posts', 'comments']),
-            )
-                ->allowedSorts([
-                    'id',
-                    'name',
-                    'email',
-                    'email_verified_at',
-                    'created_at',
-                    'posts_count',
-                    'comments_count',
-                ])
-                ->allowedFilters([
-                    AllowedFilter::exact('id'),
-                    AllowedFilter::partial('name'),
-                    AllowedFilter::partial('email'),
-                    AllowedFilter::callback('email_verified_at', function (Builder $query, mixed $value): void {
-                        if ($value === 'verified') {
-                            $query->whereNotNull('email_verified_at');
-
-                            return;
-                        }
-
-                        if ($value === 'unverified') {
-                            $query->whereNull('email_verified_at');
-
-                            return;
-                        }
-
-                        if ($value) {
-                            $query->whereDate('email_verified_at', $value);
-                        }
-                    }),
-                    AllowedFilter::callback('created_at', function (Builder $query, mixed $value): void {
-                        if ($value) {
-                            $query->whereDate('created_at', $value);
-                        }
-                    }),
-                    AllowedFilter::callback('posts_count', function (Builder $query, mixed $value): void {
-                        if ($value !== null && $value !== '') {
-                            $query->has('posts', '=', (int) $value);
-                        }
-                    }),
-                    AllowedFilter::callback('comments_count', function (Builder $query, mixed $value): void {
-                        if ($value !== null && $value !== '') {
-                            $query->has('comments', '=', (int) $value);
-                        }
-                    }),
-                ])
-                ->defaultSort('id')
-                ->paginate(10)
-                ->withQueryString()
-                ->through(fn (User $user) => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'email_verified_at' => $user->email_verified_at?->toISOString(),
-                    'created_at' => $user->created_at->toISOString(),
-                    'posts_count' => $user->posts_count,
-                    'comments_count' => $user->comments_count,
-                ]),
+            'users' => UserData::collect($users),
             'sort' => request('sort', 'id'),
             'filters' => request('filter', []),
         ]);
@@ -90,14 +84,7 @@ class UserController extends Controller
     public function edit(User $user): Response
     {
         return Inertia::render('users/edit', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'email_verified_at' => $user->email_verified_at?->toISOString(),
-                'created_at' => $user->created_at->toISOString(),
-                'updated_at' => $user->updated_at->toISOString(),
-            ],
+            'user' => UserData::from($user),
         ]);
     }
 

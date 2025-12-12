@@ -1,25 +1,46 @@
 import { users as usersRoute } from '@/routes';
-import { store } from '@/actions/App/Http/Controllers/UserController';
-
 import { type BreadcrumbItem } from '@/types';
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/form/form-field';
 import { FieldGroup } from '@/components/ui/field';
+import type { FocusEventHandler } from 'react';
+import {store} from '@/actions/App/Http/Controllers/UserController';
 
 export default function CreateUserPage() {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Users', href: usersRoute().url },
         { title: 'Create user', href: '/users/create' },
     ];
+    const validateField = (
+        method: 'post' | 'put',
+        action: string,
+    ): FocusEventHandler<HTMLInputElement> => (event) => {
+        const form = event.currentTarget.form;
+
+        if (!form) {
+            return;
+        }
+
+        const formData = new FormData(form);
+
+        router.visit(action, {
+            method,
+            data: Object.fromEntries(formData.entries()),
+            headers: { Precognition: 'true' },
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+            only: ['errors'],
+        });
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create user" />
             <Form
-                method="post"
-                action={store()}
+                {...store.form()}
                 className="w-full max-w-3xl space-y-6"
             >
                 {({ errors, processing }) => (
@@ -31,6 +52,7 @@ export default function CreateUserPage() {
                                 autoComplete="name"
                                 required
                                 error={errors.name}
+                                onBlur={validateField('post', '/users')}
                             />
                             <FormField
                                 label="Email"
@@ -39,6 +61,7 @@ export default function CreateUserPage() {
                                 autoComplete="email"
                                 required
                                 error={errors.email}
+                                onBlur={validateField('post', '/users')}
                             />
                         </FieldGroup>
                         <div className="flex flex-wrap items-center gap-3">

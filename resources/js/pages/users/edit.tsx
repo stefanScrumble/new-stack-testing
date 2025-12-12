@@ -1,58 +1,71 @@
-import { update } from '@/actions/App/Http/Controllers/UserController';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/form/form-field';
 import { FieldGroup } from '@/components/ui/field';
 import AppLayout from '@/layouts/app-layout';
 import { users as usersRoute } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, router } from '@inertiajs/react';
+import type { FocusEventHandler } from 'react';
 
-type EditUser = {
-    id: number;
-    name: string;
-    email: string;
-    email_verified_at: string | null;
-    created_at: string;
-    updated_at: string;
-};
-
-export default function EditUserPage({ user }: { user: EditUser }) {
+export default function EditUserPage({ user }: { user: App.Data.UserData }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Users', href: usersRoute().url },
         { title: `Edit ${user.name}`, href: `/users/${user.id}/edit` },
     ];
+    const validateField = (
+        method: 'post' | 'put',
+        action: string,
+    ): FocusEventHandler<HTMLInputElement> => (event) => {
+        const form = event.currentTarget.form;
+
+        if (!form) {
+            return;
+        }
+
+        const formData = new FormData(form);
+
+        router.visit(action, {
+            method,
+            data: Object.fromEntries(formData.entries()),
+            headers: { Precognition: 'true' },
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+            only: ['errors'],
+        });
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit ${user.name}`} />
             <Form
                 method="put"
-                action={update(user.id)}
+                action={`/users/${user.id}`}
                 className="w-full max-w-3xl space-y-6"
             >
-                {({ processing, errors, recentlySuccessful, submit }) => (
+                    {({ processing, errors, recentlySuccessful }) => (
                     <>
                         <FieldGroup className="grid gap-6 md:grid-cols-2">
                             <FormField
                                 label="Name"
                                 name="name"
                                 autoComplete="name"
-                                defaultValue={user.name}
-                                required
-                                error={errors.name}
-                                onBlur={() => submit()}
-                            />
-                            <FormField
-                                label="Email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                defaultValue={user.email}
-                                required
-                                error={errors.email}
-                                onBlur={() => submit()}
-                            />
-                        </FieldGroup>
+                                    defaultValue={user.name}
+                                    required
+                                    error={errors.name}
+                                    onBlur={validateField('put', `/users/${user.id}`)}
+                                />
+                                <FormField
+                                    label="Email"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    defaultValue={user.email}
+                                    required
+                                    error={errors.email}
+                                    onBlur={validateField('put', `/users/${user.id}`)}
+                                />
+                            </FieldGroup>
                         <div className="flex flex-wrap items-center gap-3">
                             <Button
                                 type="submit"

@@ -2,12 +2,12 @@ import UsersTable, {
     type PaginatedUsers,
     type UserFilters,
 } from '@/components/users/users-table';
+import {create}  from '@/actions/App/Http/Controllers/UserController';
 import AppLayout from '@/layouts/app-layout';
 import { users as usersRoute } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import {create} from '@/actions/App/Http/Controllers/UserController'
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

@@ -1,4 +1,3 @@
-import {edit} from '@/actions/App/Http/Controllers/UserController';
 import * as Paginations from '@/components/application/pagination/pagination';
 import { Table, TableCard } from '@/components/application/table/table';
 import { Button } from '@/components/ui/button';
@@ -24,17 +23,16 @@ import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { type SortDescriptor } from 'react-aria-components';
 
-export type UsersTableUser = {
-    id: number;
-    name: string;
-    email: string;
-    email_verified_at: string | null;
-    created_at: string;
-    posts_count: number;
-    comments_count: number;
-};
+export type UsersTableUser = App.Data.UserData;
 
-type UserColumnKey = keyof UsersTableUser;
+type UserColumnKey =
+    | 'id'
+    | 'name'
+    | 'email'
+    | 'email_verified_at'
+    | 'created_at'
+    | 'posts_count'
+    | 'comments_count';
 type PaginationLink = { url: string | null; label: string; active: boolean };
 export type UserFilters = Partial<Record<UserColumnKey, string>>;
 
@@ -405,7 +403,10 @@ export default function UsersTable({
                 sortDescriptor={sortDescriptor}
                 onSortChange={(descriptor) => navigate(1, descriptor)}
                 onRowAction={(userId) => {
-                    router.visit(edit(userId as unknown as number))
+                    router.visit(`/users/${userId}/edit`, {
+                        preserveScroll: true,
+                        preserveState: true,
+                    });
                 }}
                 selectionMode="none"
             >

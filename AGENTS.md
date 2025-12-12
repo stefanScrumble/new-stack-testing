@@ -37,3 +37,6 @@
 
 ## Frontend libraries
 See [chadcn-agent.md](./docs/chadcn-agents.md) for chadcn guildelines 
+
+## Wayfinder
+Use laravel wayfinder for navigation and breadcrumbs. See [wayfinder.md](./docs/wayfinder.md) for more information.
