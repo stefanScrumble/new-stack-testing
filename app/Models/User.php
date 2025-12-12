@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -59,5 +60,32 @@ class User extends Authenticatable
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function scopeEmailVerifiedFilter(Builder $query, mixed $value): Builder
+    {
+        if ($value === 'verified') {
+            return $query->whereNotNull('email_verified_at');
+        }
+
+        if ($value === 'unverified') {
+            return $query->whereNull('email_verified_at');
+        }
+
+        return $value ? $query->whereDate('email_verified_at', $value) : $query;
+    }
+    
+    public function scopePostsCountEquals(Builder $query, mixed $value): Builder
+    {
+        return $value !== null && $value !== ''
+            ? $query->has('posts', '=', (int) $value)
+            : $query;
+    }
+
+    public function scopeCommentsCountEquals(Builder $query, mixed $value): Builder
+    {
+        return $value !== null && $value !== ''
+            ? $query->has('comments', '=', (int) $value)
+            : $query;
     }
 }

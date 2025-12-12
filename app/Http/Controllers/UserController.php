@@ -37,38 +37,10 @@ class UserController extends Controller
                 AllowedFilter::exact('id'),
                 AllowedFilter::partial('name'),
                 AllowedFilter::partial('email'),
-                AllowedFilter::callback('email_verified_at', function (Builder $query, mixed $value): void {
-                    if ($value === 'verified') {
-                        $query->whereNotNull('email_verified_at');
-
-                        return;
-                    }
-
-                    if ($value === 'unverified') {
-                        $query->whereNull('email_verified_at');
-
-                        return;
-                    }
-
-                    if ($value) {
-                        $query->whereDate('email_verified_at', $value);
-                    }
-                }),
-                AllowedFilter::callback('created_at', function (Builder $query, mixed $value): void {
-                    if ($value) {
-                        $query->whereDate('created_at', $value);
-                    }
-                }),
-                AllowedFilter::callback('posts_count', function (Builder $query, mixed $value): void {
-                    if ($value !== null && $value !== '') {
-                        $query->has('posts', '=', (int) $value);
-                    }
-                }),
-                AllowedFilter::callback('comments_count', function (Builder $query, mixed $value): void {
-                    if ($value !== null && $value !== '') {
-                        $query->has('comments', '=', (int) $value);
-                    }
-                }),
+                AllowedFilter::scope('email_verified_at', 'email_verified_filter'),
+                AllowedFilter::exact('created_on'),
+                AllowedFilter::scope('posts_count', 'posts_count_equals'),
+                AllowedFilter::scope('comments_count', 'comments_count_equals'),
             ])
             ->defaultSort('id')
             ->paginate(10)

@@ -16,7 +16,7 @@ import { show } from "@/actions/App/Http/Controllers/PostController";
 
 show.url(1); // "/posts/1"
 show.head(1); // { url: "/posts/1", method: "head" }
-Wayfinder functions accept a variety of shapes for their arguments:
+## Wayfinder functions accept a variety of shapes for their arguments:
 
 import { show, update } from "@/actions/App/Http/Controllers/PostController";
 
@@ -29,14 +29,14 @@ update([1, 2]);
 update({ post: 1, author: 2 });
 update({ post: { id: 1 }, author: { id: 2 } });
 
-Invokable Controllers
+## Invokable Controllers
 If your controller is an invokable controller, you may simply invoke the imported Wayfinder function directly:
 
 import StorePostController from "@/actions/App/Http/Controllers/StorePostController";
 
 StorePostController();
 Importing Controllers
-You may also import the Wayfinder generated controller definition and invoke its individual methods on the imported object:
+## You may also import the Wayfinder generated controller definition and invoke its individual methods on the imported object:
 
 import PostController from "@/actions/App/Http/Controllers/PostController";
 

@@ -18,7 +18,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { UsersFilterSheet } from './users-table-filters';
+import { UsersFilterSheet } from '@/components/users/users-table-filters';
 
 export type UsersTableUser = App.Data.UserData;
 

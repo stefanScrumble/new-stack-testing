@@ -16,9 +16,17 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type InventoryIndexProps = Readonly<{
     products: PaginatedProducts;
+    sort: string;
+    filters: import('@/components/inventory/inventory-table').InventoryFilters;
+    filterableWarehouses: App.Data.WarehouseData[];
 }>;
 
-export default function InventoryIndex({ products }: InventoryIndexProps) {
+export default function InventoryIndex({
+    products,
+    sort,
+    filters,
+    filterableWarehouses,
+}: InventoryIndexProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Inventory" />
@@ -28,7 +36,12 @@ export default function InventoryIndex({ products }: InventoryIndexProps) {
                         <Link href={inventoryRoutes.create().url}>Add product</Link>
                     </Button>
                 </div>
-                <InventoryTable products={products} />
+                <InventoryTable
+                    products={products}
+                    sort={sort}
+                    filters={filters}
+                    filterableWarehouses={filterableWarehouses}
+                />
             </div>
         </AppLayout>
     );
