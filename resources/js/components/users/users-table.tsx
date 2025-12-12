@@ -8,7 +8,6 @@ import {
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { UsersFilterSheet } from '@/components/users/users-filter-sheet';
 import { useEventListener } from '@/hooks/use-event-listener';
 import { users as usersRoute } from '@/routes';
 import {
@@ -19,6 +18,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { UsersFilterSheet } from './users-table-filters';
 
 export type UsersTableUser = App.Data.UserData;
 
