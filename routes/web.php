@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -22,6 +23,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('users', [UserController::class, 'store'])->name('users.store')->middleware([HandlePrecognitiveRequests::class]);
     Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('users/{user}', [UserController::class, 'update'])->name('users.update')->middleware([HandlePrecognitiveRequests::class]);
+
+    Route::get('inventory', [ProductController::class, 'index'])->name('inventory.index');
+    Route::get('inventory/create', [ProductController::class, 'create'])->name('inventory.create');
+    Route::post('inventory', [ProductController::class, 'store'])->name('inventory.store')->middleware([HandlePrecognitiveRequests::class]);
+    Route::get('inventory/{product}/edit', [ProductController::class, 'edit'])->name('inventory.edit');
+    Route::put('inventory/{product}', [ProductController::class, 'update'])->name('inventory.update')->middleware([HandlePrecognitiveRequests::class]);
 });
 
 require __DIR__.'/settings.php';
