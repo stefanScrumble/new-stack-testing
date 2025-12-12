@@ -1,10 +1,16 @@
-import { Button } from '@/components/ui/button';
-import { useEventListener } from '@/hooks/use-event-listener';
-import { UsersFilterSheet } from '@/components/users/users-filter-sheet';
-import { users as usersRoute } from '@/routes';
+import {
+    createColumnHelper,
+    flexRender,
+    getCoreRowModel,
+    useReactTable,
+    type SortingState,
+} from '@tanstack/react-table';
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-import { type SortDescriptor } from 'react-aria-components';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { UsersFilterSheet } from '@/components/users/users-filter-sheet';
+import { useEventListener } from '@/hooks/use-event-listener';
+import { users as usersRoute } from '@/routes';
 import {
     Table,
     TableBody,
@@ -36,63 +42,66 @@ export type PaginatedUsers = {
     total: number;
 };
 
-const columns: { id: UserColumnKey; label: string; sortable?: boolean }[] = [
-    { id: 'id', label: 'ID', sortable: true },
-    { id: 'name', label: 'Name', sortable: true },
-    { id: 'email', label: 'Email', sortable: true },
-    { id: 'email_verified_at', label: 'Verified', sortable: true },
-    { id: 'created_at', label: 'Created', sortable: true },
-    { id: 'posts_count', label: 'Posts', sortable: true },
-    { id: 'comments_count', label: 'Comments', sortable: true },
+const columnHelper = createColumnHelper<UsersTableUser>();
+const sortableColumns: UserColumnKey[] = [
+    'id',
+    'name',
+    'email',
+    'email_verified_at',
+    'created_at',
+    'posts_count',
+    'comments_count',
+];
+const columns = [
+    columnHelper.accessor('id', { header: 'ID', enableSorting: true }),
+    columnHelper.accessor('name', { header: 'Name', enableSorting: true }),
+    columnHelper.accessor('email', { header: 'Email', enableSorting: true }),
+    columnHelper.accessor('email_verified_at', {
+        header: 'Verified',
+        enableSorting: true,
+        cell: ({ getValue }) => formatDateTime(getValue() as string | null),
+    }),
+    columnHelper.accessor('created_at', {
+        header: 'Created',
+        enableSorting: true,
+        cell: ({ getValue }) => formatDateTime(getValue() as string | null),
+    }),
+    columnHelper.accessor('posts_count', { header: 'Posts', enableSorting: true }),
+    columnHelper.accessor('comments_count', {
+        header: 'Comments',
+        enableSorting: true,
+    }),
 ];
 
 const formatDateTime = (value: string | null) =>
     value ? new Date(value).toLocaleString() : '—';
 
-const getSortDescriptor = (
-    value: string | null | undefined,
-): SortDescriptor => {
+const getSortingState = (value: string | null | undefined): SortingState => {
     if (!value) {
-        return { column: 'id', direction: 'ascending' };
+        return [{ id: 'id', desc: false }];
     }
-
-    const direction = value.startsWith('-') ? 'descending' : 'ascending';
-    const column = (
-        direction === 'descending' ? value.slice(1) : value
-    ) as UserColumnKey;
-
-    return columns.some(({ id }) => id === column)
-        ? { column, direction }
-        : { column: 'id', direction: 'ascending' };
+    const desc = value.startsWith('-');
+    const id = (desc ? value.slice(1) : value) as UserColumnKey;
+    return sortableColumns.includes(id)
+        ? [{ id, desc }]
+        : [{ id: 'id', desc: false }];
 };
 
-const getSortParam = (descriptor: SortDescriptor) => {
-    if (!descriptor.column || !descriptor.direction) {
-        return undefined;
-    }
+const getSortParam = (sorting?: SortingState[number]) =>
+    sorting ? (sorting.desc ? `-${sorting.id}` : sorting.id) : undefined;
 
-    const column = descriptor.column.toString();
-    return descriptor.direction === 'descending' ? `-${column}` : column;
-};
-
-const renderCell = (user: UsersTableUser, key: UserColumnKey) => {
-    if (key === 'created_at' || key === 'email_verified_at') {
-        return formatDateTime(user[key] as string | null);
-    }
-
-    return user[key];
-};
+type UsersTableProps = Readonly<{
+    users: PaginatedUsers;
+    sort: string;
+    filters: UserFilters;
+}>;
 
 export default function UsersTable({
     users,
     sort,
     filters,
-}: {
-    users: PaginatedUsers;
-    sort: string;
-    filters: UserFilters;
-}) {
-    const sortDescriptor = getSortDescriptor(sort);
+}: UsersTableProps) {
+    const sorting = getSortingState(sort);
     const [filterValues, setFilterValues] = useState<UserFilters>({
         id: filters.id ?? '',
         name: filters.name ?? '',
@@ -103,6 +112,11 @@ export default function UsersTable({
         comments_count: filters.comments_count ?? '',
     });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const routerOptions = {
+        preserveScroll: true,
+        preserveState: true,
+        replace: true,
+    };
 
     function buildFilters(source: UserFilters) {
         return Object.fromEntries(
@@ -118,26 +132,52 @@ export default function UsersTable({
 
     const submitFilters = () => {
         const activeFilters = buildFilters(filterValues);
-        const query: Record<string, unknown> = {
-            page: 1,
-            sort: getSortParam(sortDescriptor),
-        };
-
-        if (Object.keys(activeFilters).length) {
-            query.filter = activeFilters;
-        }
-
         router.get(
-            usersRoute({ query }).url,
+            usersRoute({
+                query: {
+                    page: 1,
+                    sort: getSortParam(sorting[0]),
+                    ...(Object.keys(activeFilters).length
+                        ? { filter: activeFilters }
+                        : {}),
+                },
+            }).url,
             {},
-            {
-                preserveScroll: true,
-                preserveState: true,
-                replace: true,
-            },
+            routerOptions,
         );
         setIsFilterOpen(false);
     };
+
+    const navigate = (page: number, nextSorting?: SortingState[number]) => {
+        const activeFilters = buildFilters(filters);
+        router.get(
+            usersRoute({
+                query: {
+                    page,
+                    sort: getSortParam(nextSorting ?? sorting[0]),
+                    ...(Object.keys(activeFilters).length
+                        ? { filter: activeFilters }
+                        : {}),
+                },
+            }).url,
+            {},
+            routerOptions,
+        );
+    };
+
+    const table = useReactTable({
+        data: users.data,
+        columns,
+        state: { sorting },
+        manualSorting: true,
+        enableSortingRemoval: false,
+        getCoreRowModel: getCoreRowModel(),
+        onSortingChange: (updater) => {
+            const next = typeof updater === 'function' ? updater(sorting) : updater;
+            const [nextSorting] = next;
+            navigate(1, nextSorting);
+        },
+    });
 
     useEventListener('keydown', (event) => {
         if (!isFilterOpen) {
@@ -149,29 +189,6 @@ export default function UsersTable({
             submitFilters();
         }
     });
-
-
-
-    const navigate = (page: number, descriptor?: SortDescriptor) => {
-        const activeFilters = buildFilters(filters);
-        router.get(
-            usersRoute({
-                query: {
-                    page,
-                    sort: getSortParam(descriptor ?? sortDescriptor),
-                    ...(Object.keys(activeFilters).length
-                        ? { filter: activeFilters }
-                        : {}),
-                },
-            }).url,
-            {},
-            {
-                preserveScroll: true,
-                preserveState: true,
-                replace: true,
-            },
-        );
-    };
 
     const hasPrevious = users.current_page > 1;
     const hasNext = users.current_page < users.last_page;
@@ -200,64 +217,49 @@ export default function UsersTable({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            {columns.map((column) => {
-                                const active =
-                                    sortDescriptor.column === column.id;
-                                const direction =
-                                    active && sortDescriptor.direction === 'ascending'
-                                        ? '↑'
-                                        : active
-                                            ? '↓'
-                                            : null;
+                            {table.getFlatHeaders().map((header) => {
+                                const sorted = header.column.getIsSorted();
                                 return (
-                                    <TableHead key={column.id}>
-                                        {column.sortable ? (
-                                            <button
-                                                type="button"
-                                                className="flex items-center gap-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
-                                                onClick={() =>
-                                                    navigate(1, {
-                                                        column: column.id,
-                                                        direction:
-                                                            sortDescriptor.column ===
-                                                                column.id &&
-                                                            sortDescriptor.direction ===
-                                                                'ascending'
-                                                                ? 'descending'
-                                                                : 'ascending',
-                                                    })
-                                                }
-                                            >
-                                                {column.label}
-                                                {direction && (
-                                                    <span className="text-xs">
-                                                        {direction}
-                                                    </span>
-                                                )}
-                                            </button>
-                                        ) : (
-                                            column.label
-                                        )}
+                                    <TableHead key={header.id}>
+                                        <button
+                                            type="button"
+                                            className="flex items-center gap-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
+                                            onClick={header.column.getToggleSortingHandler()}
+                                        >
+                                            {flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext(),
+                                            )}
+                                            {sorted === 'asc' && (
+                                                <span className="text-xs">↑</span>
+                                            )}
+                                            {sorted === 'desc' && (
+                                                <span className="text-xs">↓</span>
+                                            )}
+                                        </button>
                                     </TableHead>
                                 );
                             })}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users.data?.map((user) => (
+                        {table.getRowModel().rows.map((row) => (
                             <TableRow
-                                key={user.id}
+                                key={row.id}
                                 className="cursor-pointer"
                                 onClick={() =>
-                                    router.visit(`/users/${user.id}/edit`, {
+                                    router.visit(`/users/${row.original.id}/edit`, {
                                         preserveScroll: true,
                                         preserveState: true,
                                     })
                                 }
                             >
-                                {columns.map((column) => (
-                                    <TableCell key={column.id}>
-                                        {renderCell(user, column.id)}
+                                {row.getVisibleCells().map((cell) => (
+                                    <TableCell key={cell.id}>
+                                        {flexRender(
+                                            cell.column.columnDef.cell,
+                                            cell.getContext(),
+                                        )}
                                     </TableCell>
                                 ))}
                             </TableRow>
