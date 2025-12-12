@@ -1,5 +1,3 @@
-import * as Paginations from '@/components/application/pagination/pagination';
-import { Table, TableCard } from '@/components/application/table/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,6 +20,14 @@ import { users as usersRoute } from '@/routes';
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { type SortDescriptor } from 'react-aria-components';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 export type UsersTableUser = App.Data.UserData;
 
@@ -197,24 +203,32 @@ export default function UsersTable({
             ? filterValues.email_verified_at
             : 'any';
 
+    const hasPrevious = users.current_page > 1;
+    const hasNext = users.current_page < users.last_page;
+
     return (
-        <TableCard.Root>
-            <TableCard.Header
-                title="Users"
-                badge={users.total}
-                contentTrailing={
-                    <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="outline" size="sm">
-                                Filters
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="right" className="max-w-md">
-                            <SheetHeader>
-                                <SheetTitle>Filter users</SheetTitle>
-                            </SheetHeader>
-                            <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
-                                <div className="grid grid-cols-1 gap-4">
+        <div className="flex flex-col gap-4 rounded-xl border border-border bg-card shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="text-base font-semibold text-foreground">
+                        Users
+                    </span>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                        {users.total}
+                    </span>
+                </div>
+                <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                    <SheetTrigger asChild>
+                        <Button variant="outline" size="sm">
+                            Filters
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="max-w-md">
+                        <SheetHeader>
+                            <SheetTitle>Filter users</SheetTitle>
+                        </SheetHeader>
+                        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
+                            <div className="grid grid-cols-1 gap-4">
                                     <div className="flex flex-col gap-2">
                                         <label
                                             className="text-sm font-medium text-foreground"
@@ -386,65 +400,114 @@ export default function UsersTable({
                                             }
                                         />
                                     </div>
-                                </div>
                             </div>
-                            <SheetFooter>
-                                <Button onClick={submitFilters}>
-                                    Apply filters
-                                </Button>
-                            </SheetFooter>
-                        </SheetContent>
-                    </Sheet>
-                }
-            />
-
-            <Table
-                aria-label="Users table"
-                sortDescriptor={sortDescriptor}
-                onSortChange={(descriptor) => navigate(1, descriptor)}
-                onRowAction={(userId) => {
-                    router.visit(`/users/${userId}/edit`, {
-                        preserveScroll: true,
-                        preserveState: true,
-                    });
-                }}
-                selectionMode="none"
-            >
-                <Table.Header columns={columns}>
-                    {(column) => (
-                        <Table.Head
-                            id={column.id}
-                            allowsSorting={column.sortable}
-                        >
-                            {column.label}
-                        </Table.Head>
-                    )}
-                </Table.Header>
-                <Table.Body
-                    items={users.data}
-                    renderEmptyState={() => (
-                        <div className="text-tertiary px-6 py-8 text-sm">
-                            No users found.
                         </div>
-                    )}
-                >
-                    {(user) => (
-                        <Table.Row id={user.id.toString()} columns={columns}>
-                            {(column) => (
-                                <Table.Cell>
-                                    {renderCell(user, column.id)}
-                                </Table.Cell>
-                            )}
-                        </Table.Row>
-                    )}
-                </Table.Body>
-            </Table>
+                        <SheetFooter>
+                            <Button onClick={submitFilters}>Apply filters</Button>
+                        </SheetFooter>
+                    </SheetContent>
+                </Sheet>
+            </div>
 
-            <Paginations.PaginationPageDefault
-                total={users.last_page}
-                page={users.current_page}
-                onPageChange={(nextPage) => navigate(nextPage)}
-            />
-        </TableCard.Root>
+            <div className="overflow-hidden border-t border-border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            {columns.map((column) => {
+                                const active =
+                                    sortDescriptor.column === column.id;
+                                const direction =
+                                    active && sortDescriptor.direction === 'ascending'
+                                        ? '↑'
+                                        : active
+                                            ? '↓'
+                                            : null;
+                                return (
+                                    <TableHead key={column.id}>
+                                        {column.sortable ? (
+                                            <button
+                                                type="button"
+                                                className="flex items-center gap-1 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
+                                                onClick={() =>
+                                                    navigate(1, {
+                                                        column: column.id,
+                                                        direction:
+                                                            sortDescriptor.column ===
+                                                                column.id &&
+                                                            sortDescriptor.direction ===
+                                                                'ascending'
+                                                                ? 'descending'
+                                                                : 'ascending',
+                                                    })
+                                                }
+                                            >
+                                                {column.label}
+                                                {direction && (
+                                                    <span className="text-xs">
+                                                        {direction}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        ) : (
+                                            column.label
+                                        )}
+                                    </TableHead>
+                                );
+                            })}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {users.data.length ? (
+                            users.data.map((user) => (
+                                <TableRow
+                                    key={user.id}
+                                    className="cursor-pointer"
+                                    onClick={() =>
+                                        router.visit(`/users/${user.id}/edit`, {
+                                            preserveScroll: true,
+                                            preserveState: true,
+                                        })
+                                    }
+                                >
+                                    {columns.map((column) => (
+                                        <TableCell key={column.id}>
+                                            {renderCell(user, column.id)}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center text-sm text-muted-foreground"
+                                >
+                                    No users found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-border bg-background px-6 py-4">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(users.current_page - 1)}
+                    disabled={!hasPrevious || !users.data.length}
+                >
+                    Previous
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(users.current_page + 1)}
+                    disabled={!hasNext || !users.data.length}
+                >
+                    Next
+                </Button>
+            </div>
+        </div>
     );
 }
