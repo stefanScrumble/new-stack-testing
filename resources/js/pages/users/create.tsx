@@ -41,7 +41,7 @@ export default function CreateUserPage() {
             <Head title="Create user" />
             <Form
                 {...store.form()}
-                className="w-full max-w-3xl space-y-6"
+                className="w-full max-w-3xl space-y-6 p-4"
             >
                 {({ errors, processing }) => (
                     <>

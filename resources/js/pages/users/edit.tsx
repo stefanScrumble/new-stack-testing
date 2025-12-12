@@ -41,7 +41,7 @@ export default function EditUserPage({ user }: { user: App.Data.UserData }) {
             <Form
                 method="put"
                 action={`/users/${user.id}`}
-                className="w-full max-w-3xl space-y-6"
+                className="w-full max-w-3xl space-y-6 p-4"
             >
                     {({ processing, errors, recentlySuccessful }) => (
                     <>

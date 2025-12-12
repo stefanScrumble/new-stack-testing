@@ -16,19 +16,21 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+type UserIndexProps = Readonly<{
+    users: PaginatedUsers;
+    sort: string;
+    filters: UserFilters;
+}>;
+
 export default function UsersIndex({
     users,
     sort,
     filters,
-}: {
-    users: PaginatedUsers;
-    sort: string;
-    filters: UserFilters;
-}) {
+}: UserIndexProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Users" />
-            <div className="flex flex-1 flex-col gap-4">
+            <div className="flex flex-1 flex-col gap-4 p-4">
                 <div className="flex items-center justify-end">
                     <Button asChild>
                         <Link href={create()}>Create user</Link>
