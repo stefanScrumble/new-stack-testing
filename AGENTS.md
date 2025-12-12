@@ -40,3 +40,6 @@ See [chadcn-agent.md](./docs/chadcn-agents.md) for chadcn guildelines
 
 ## Wayfinder
 Use laravel wayfinder for navigation and breadcrumbs. See [wayfinder.md](./docs/wayfinder.md) for more information.
+
+## Spatie Laravel data
+Instead of ::collection the method is ::collect
