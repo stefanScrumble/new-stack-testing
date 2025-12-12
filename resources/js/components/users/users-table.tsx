@@ -1,21 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import {
-    Sheet,
-    SheetContent,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { useEventListener } from '@/hooks/use-event-listener';
+import { UsersFilterSheet } from '@/components/users/users-filter-sheet';
 import { users as usersRoute } from '@/routes';
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
@@ -119,17 +104,17 @@ export default function UsersTable({
     });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-    useEffect(() => {
-        setFilterValues({
-            id: filters.id ?? '',
-            name: filters.name ?? '',
-            email: filters.email ?? '',
-            email_verified_at: filters.email_verified_at ?? '',
-            created_at: filters.created_at ?? '',
-            posts_count: filters.posts_count ?? '',
-            comments_count: filters.comments_count ?? '',
-        });
-    }, [filters]);
+    function buildFilters(source: UserFilters) {
+        return Object.fromEntries(
+            Object.entries(source).filter(
+                ([, value]) =>
+                    value !== undefined &&
+                    value !== null &&
+                    value !== '' &&
+                    value !== 'any',
+            ),
+        );
+    }
 
     const submitFilters = () => {
         const activeFilters = buildFilters(filterValues);
@@ -165,16 +150,7 @@ export default function UsersTable({
         }
     });
 
-    const buildFilters = (source: UserFilters) =>
-        Object.fromEntries(
-            Object.entries(source).filter(
-                ([, value]) =>
-                    value !== undefined &&
-                    value !== null &&
-                    value !== '' &&
-                    value !== 'any',
-            ),
-        );
+
 
     const navigate = (page: number, descriptor?: SortDescriptor) => {
         const activeFilters = buildFilters(filters);
@@ -197,12 +173,6 @@ export default function UsersTable({
         );
     };
 
-    const verificationStatus =
-        filterValues.email_verified_at === 'verified' ||
-        filterValues.email_verified_at === 'unverified'
-            ? filterValues.email_verified_at
-            : 'any';
-
     const hasPrevious = users.current_page > 1;
     const hasNext = users.current_page < users.last_page;
 
@@ -217,196 +187,13 @@ export default function UsersTable({
                         {users.total}
                     </span>
                 </div>
-                <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                    <SheetTrigger asChild>
-                        <Button variant="outline" size="sm">
-                            Filters
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="right" className="max-w-md">
-                        <SheetHeader>
-                            <SheetTitle>Filter users</SheetTitle>
-                        </SheetHeader>
-                        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
-                            <div className="grid grid-cols-1 gap-4">
-                                    <div className="flex flex-col gap-2">
-                                        <label
-                                            className="text-sm font-medium text-foreground"
-                                            htmlFor="filter-id"
-                                        >
-                                            ID
-                                        </label>
-                                        <Input
-                                            id="filter-id"
-                                            type="number"
-                                            value={filterValues.id ?? ''}
-                                            onChange={(event) =>
-                                                setFilterValues({
-                                                    ...filterValues,
-                                                    id: event.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label
-                                            className="text-sm font-medium text-foreground"
-                                            htmlFor="filter-name"
-                                        >
-                                            Name
-                                        </label>
-                                        <Input
-                                            id="filter-name"
-                                            value={filterValues.name ?? ''}
-                                            onChange={(event) =>
-                                                setFilterValues({
-                                                    ...filterValues,
-                                                    name: event.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label
-                                            className="text-sm font-medium text-foreground"
-                                            htmlFor="filter-email"
-                                        >
-                                            Email
-                                        </label>
-                                        <Input
-                                            id="filter-email"
-                                            type="email"
-                                            value={filterValues.email ?? ''}
-                                            onChange={(event) =>
-                                                setFilterValues({
-                                                    ...filterValues,
-                                                    email: event.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium text-foreground">
-                                            Verified
-                                        </label>
-                                        <Select
-                                            value={verificationStatus}
-                                            onValueChange={(value) =>
-                                                setFilterValues({
-                                                    ...filterValues,
-                                                    email_verified_at:
-                                                        value === 'any'
-                                                            ? ''
-                                                            : value,
-                                                })
-                                            }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Any status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="any">
-                                                    Any status
-                                                </SelectItem>
-                                                <SelectItem value="verified">
-                                                    Verified
-                                                </SelectItem>
-                                                <SelectItem value="unverified">
-                                                    Unverified
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <Input
-                                            type="date"
-                                            value={
-                                                verificationStatus === 'any'
-                                                    ? (filterValues.email_verified_at ??
-                                                      '')
-                                                    : ''
-                                            }
-                                            onChange={(event) =>
-                                                setFilterValues({
-                                                    ...filterValues,
-                                                    email_verified_at:
-                                                        event.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label
-                                            className="text-sm font-medium text-foreground"
-                                            htmlFor="filter-created-at"
-                                        >
-                                            Created on
-                                        </label>
-                                        <Input
-                                            id="filter-created-at"
-                                            type="date"
-                                            value={
-                                                filterValues.created_at ?? ''
-                                            }
-                                            onChange={(event) =>
-                                                setFilterValues({
-                                                    ...filterValues,
-                                                    created_at:
-                                                        event.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label
-                                            className="text-sm font-medium text-foreground"
-                                            htmlFor="filter-posts"
-                                        >
-                                            Posts
-                                        </label>
-                                        <Input
-                                            id="filter-posts"
-                                            type="number"
-                                            value={
-                                                filterValues.posts_count ?? ''
-                                            }
-                                            onChange={(event) =>
-                                                setFilterValues({
-                                                    ...filterValues,
-                                                    posts_count:
-                                                        event.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label
-                                            className="text-sm font-medium text-foreground"
-                                            htmlFor="filter-comments"
-                                        >
-                                            Comments
-                                        </label>
-                                        <Input
-                                            id="filter-comments"
-                                            type="number"
-                                            value={
-                                                filterValues.comments_count ??
-                                                ''
-                                            }
-                                            onChange={(event) =>
-                                                setFilterValues({
-                                                    ...filterValues,
-                                                    comments_count:
-                                                        event.target.value,
-                                                })
-                                            }
-                                        />
-                                    </div>
-                            </div>
-                        </div>
-                        <SheetFooter>
-                            <Button onClick={submitFilters}>Apply filters</Button>
-                        </SheetFooter>
-                    </SheetContent>
-                </Sheet>
+                <UsersFilterSheet
+                    open={isFilterOpen}
+                    onOpenChange={setIsFilterOpen}
+                    filters={filterValues}
+                    onChange={setFilterValues}
+                    onApply={submitFilters}
+                />
             </div>
 
             <div className="overflow-hidden border-t border-border">
@@ -457,26 +244,25 @@ export default function UsersTable({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users.data.length ? (
-                            users.data.map((user) => (
-                                <TableRow
-                                    key={user.id}
-                                    className="cursor-pointer"
-                                    onClick={() =>
-                                        router.visit(`/users/${user.id}/edit`, {
-                                            preserveScroll: true,
-                                            preserveState: true,
-                                        })
-                                    }
-                                >
-                                    {columns.map((column) => (
-                                        <TableCell key={column.id}>
-                                            {renderCell(user, column.id)}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
+                        {users.data?.map((user) => (
+                            <TableRow
+                                key={user.id}
+                                className="cursor-pointer"
+                                onClick={() =>
+                                    router.visit(`/users/${user.id}/edit`, {
+                                        preserveScroll: true,
+                                        preserveState: true,
+                                    })
+                                }
+                            >
+                                {columns.map((column) => (
+                                    <TableCell key={column.id}>
+                                        {renderCell(user, column.id)}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))}
+                        {users.data.length === 0 && (
                             <TableRow>
                                 <TableCell
                                     colSpan={columns.length}
