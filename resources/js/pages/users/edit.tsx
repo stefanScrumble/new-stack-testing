@@ -1,7 +1,7 @@
-import InputError from '@/components/input-error';
+import { update } from '@/actions/App/Http/Controllers/UserController';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { FormField } from '@/components/form/form-field';
+import { FieldGroup } from '@/components/ui/field';
 import AppLayout from '@/layouts/app-layout';
 import { users as usersRoute } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
@@ -15,8 +15,6 @@ type EditUser = {
     created_at: string;
     updated_at: string;
 };
-
-
 
 export default function EditUserPage({ user }: { user: EditUser }) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -39,40 +37,32 @@ export default function EditUserPage({ user }: { user: EditUser }) {
 
                 <Form
                     method="put"
-                    action={`/users/${user.id}`}
+                    action={update(user.id)}
                     className="w-full max-w-3xl space-y-6"
                 >
-                    {({
-                        processing,
-                        errors,
-                        recentlySuccessful,
-                    }) => (
+                    {({ processing, errors, recentlySuccessful, submit }) => (
                         <>
-                            <div className="grid gap-6 md:grid-cols-2">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Name</Label>
-                                    <Input
-                                        id="name"
-                                        name="name"
-                                        autoComplete="name"
-                                        defaultValue={user.name}
-                                        required
-                                    />
-                                    <InputError message={errors.name} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        autoComplete="email"
-                                        required
-                                        defaultValue={user.email}
-                                    />
-                                    <InputError message={errors.email} />
-                                </div>
-                            </div>
+                            <FieldGroup className="grid gap-6 md:grid-cols-2">
+                                <FormField
+                                    label="Name"
+                                    name="name"
+                                    autoComplete="name"
+                                    defaultValue={user.name}
+                                    required
+                                    error={errors.name}
+                                    onBlur={() => submit()}
+                                />
+                                <FormField
+                                    label="Email"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    defaultValue={user.email}
+                                    required
+                                    error={errors.email}
+                                    onBlur={() => submit()}
+                                />
+                            </FieldGroup>
                             <div className="flex flex-wrap items-center gap-3">
                                 <Button
                                     type="submit"

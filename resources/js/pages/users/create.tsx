@@ -1,12 +1,12 @@
 import { users as usersRoute } from '@/routes';
+import { store } from '@/actions/App/Http/Controllers/UserController';
+
 import { type BreadcrumbItem } from '@/types';
 import { Form, Head, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Field } from '@/components/ui/field';
+import { FormField } from '@/components/form/form-field';
+import { FieldGroup } from '@/components/ui/field';
 
 export default function CreateUserPage() {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -29,34 +29,28 @@ export default function CreateUserPage() {
 
                 <Form
                     method="post"
-                    action={usersRoute().url}
+                    action={store()}
                     className="w-full max-w-3xl space-y-6"
                 >
                     {({ errors, processing }) => (
                         <>
-                            <div className="grid gap-6 md:grid-cols-2">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Name</Label>
-                                    <Input
-                                        id="name"
-                                        autoComplete="name"
-                                        required
-                                        name="name"
-                                    />
-                                    <InputError message={errors.name} />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        autoComplete="email"
-                                        required
-                                        name="email"
-                                    />
-                                    <InputError message={errors.email} />
-                                </div>
-                            </div>
+                            <FieldGroup className="grid gap-6 md:grid-cols-2">
+                                <FormField
+                                    label="Name"
+                                    name="name"
+                                    autoComplete="name"
+                                    required
+                                    error={errors.name}
+                                />
+                                <FormField
+                                    label="Email"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    required
+                                    error={errors.email}
+                                />
+                            </FieldGroup>
                             <div className="flex flex-wrap items-center gap-3">
                                 <Button
                                     type="submit"

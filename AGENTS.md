@@ -36,4 +36,4 @@
 - Validate incoming data with Form Requests and authorize actions via policies to guard access consistently.
 
 ## Frontend libraries
-See [untitled-ui-agent.md](./docs/untitled-ui-agents.md) for untitled-ui guildelines 
+See [chadcn-agent.md](./docs/chadcn-agents.md) for chadcn guildelines 
