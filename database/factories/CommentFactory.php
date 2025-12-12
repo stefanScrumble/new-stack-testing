@@ -11,9 +11,20 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            'post_id' => Post::factory(),
+            'post_id' =>  Post::factory(),
             'user_id' => User::factory(),
             'body' => fake()->sentence(),
         ];
+    }
+
+    public function existingPost(): static
+    {
+        return $this->state(function () {
+            $postId = Post::query()->inRandomOrder()->select('id')->firstOrFail()->id;
+
+            return [
+                'post_id' => $postId,
+            ];
+        });
     }
 }
