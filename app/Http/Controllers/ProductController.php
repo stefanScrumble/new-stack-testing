@@ -43,6 +43,7 @@ class ProductController extends Controller
                 AllowedFilter::scope('total_quantity', 'total_quantity_equals'),
                 AllowedFilter::exact('created_on'),
                 AllowedFilter::scope('warehouses', 'in_warehouses'),
+                AllowedFilter::scope('below_minimum'),
             ])
             ->defaultSort('id')
             ->paginate(10)

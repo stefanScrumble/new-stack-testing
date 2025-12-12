@@ -15,7 +15,7 @@ import {
     type SortingState,
 } from '@tanstack/react-table';
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { edit as editProduct, index as inventoryIndex } from '@/actions/App/Http/Controllers/ProductController';
 import InventoryFilterSheet from './inventory-table-filters';
 import { useEventListener } from '@/hooks/use-event-listener';
@@ -44,6 +44,7 @@ export type InventoryFilters = {
     weight?: string;
     created_at?: string;
     warehouses?: WarehouseFilter;
+    below_minimum?: string;
 };
 
 export type PaginatedProducts = {
@@ -89,7 +90,7 @@ const columns = [
         enableSorting: true,
     }),
     columnHelper.accessor('total_quantity', {
-        header: 'Total quantity',
+        header: 'Current stock',
         enableSorting: true,
     }),
     columnHelper.accessor('weight', {
@@ -169,6 +170,7 @@ export default function InventoryTable({
             : filters.warehouses
                 ? String(filters.warehouses).split(',').filter(Boolean)
                 : [],
+        below_minimum: filters.below_minimum ?? '',
     });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const routerOptions = {
@@ -176,6 +178,7 @@ export default function InventoryTable({
         preserveState: true,
         replace: true,
     };
+    const stockFilter = filterValues.below_minimum ? 'belowMin' : 'all';
 
     function buildFilters(source: InventoryFilters) {
         return Object.fromEntries(
@@ -218,8 +221,36 @@ export default function InventoryTable({
         setIsFilterOpen(false);
     };
 
+    const updateStockFilter = (next: 'all' | 'belowMin') => {
+        const nextFilters = {
+            ...filterValues,
+            below_minimum: next === 'belowMin' ? '1' : '',
+        };
+        setFilterValues(nextFilters);
+        const activeFilters = buildFilters({
+            ...filters,
+            below_minimum: nextFilters.below_minimum,
+        });
+        router.get(
+            inventoryIndex({
+                query: {
+                    page: 1,
+                    sort: getSortParam(sorting[0]),
+                    ...(Object.keys(activeFilters).length
+                        ? { filter: activeFilters }
+                        : {}),
+                },
+            }).url,
+            {},
+            routerOptions,
+        );
+    };
+
     const navigate = (page: number, nextSorting?: SortingState[number]) => {
-        const activeFilters = buildFilters(filters);
+        const activeFilters = buildFilters({
+            ...filters,
+            below_minimum: filterValues.below_minimum,
+        });
         router.get(
             inventoryIndex({
                 query: {
@@ -266,13 +297,35 @@ export default function InventoryTable({
     return (
         <div className="flex flex-col gap-4 rounded-xl border border-border bg-card shadow-sm">
             <div className="flex items-center justify-between gap-3 px-6 py-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="text-base font-semibold text-foreground">
-                        Inventory
-                    </span>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
-                        {products.total}
-                    </span>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant={stockFilter === 'all' ? 'default' : 'outline'}
+                            size="sm"
+                            type="button"
+                            onClick={() => updateStockFilter('all')}
+                            aria-pressed={stockFilter === 'all'}
+                        >
+                            Show all
+                        </Button>
+                        <Button
+                            variant={stockFilter === 'belowMin' ? 'default' : 'outline'}
+                            size="sm"
+                            type="button"
+                            onClick={() => updateStockFilter('belowMin')}
+                            aria-pressed={stockFilter === 'belowMin'}
+                        >
+                            Below minimum
+                        </Button>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="text-base font-semibold text-foreground">
+                            Inventory
+                        </span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                            {products.total}
+                        </span>
+                    </div>
                 </div>
                 <InventoryFilterSheet
                     open={isFilterOpen}

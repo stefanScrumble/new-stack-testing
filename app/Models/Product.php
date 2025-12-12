@@ -34,7 +34,6 @@ class Product extends Model
             ->withTimestamps();
     }
 
-
     public function scopeTotalQuantityEquals(Builder $query, mixed $value): Builder
     {
         if ($value === null || $value === '') {
@@ -66,6 +65,17 @@ class Product extends Model
             fn (Builder $warehouseQuery) => $warehouseQuery->whereIn('warehouses.id', $ids),
             '>=',
             $ids->count(),
+        );
+    }
+
+    public function scopeBelowMinimum(Builder $query, mixed $value): Builder
+    {
+        if ($value === null || $value === '' || $value === '0' || $value === 0) {
+            return $query;
+        }
+
+        return $query->whereRaw(
+            'coalesce((select sum(quantity) from product_warehouse where product_warehouse.product_id = products.id), 0) < products.min_stock',
         );
     }
 }
