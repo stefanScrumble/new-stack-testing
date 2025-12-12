@@ -1,3 +1,5 @@
+import {edit} from '@/actions/App/Http/Controllers/UserController';
+import * as Paginations from '@/components/application/pagination/pagination';
 import { Table, TableCard } from '@/components/application/table/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,12 +18,11 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { useEventListener } from '@/hooks/use-event-listener';
 import { users as usersRoute } from '@/routes';
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { type SortDescriptor } from 'react-aria-components';
-import * as Paginations from "@/components/application/pagination/pagination";
-import { useEventListener } from '@/hooks/use-event-listener';
 
 export type UsersTableUser = {
     id: number;
@@ -103,8 +104,6 @@ export default function UsersTable({
     filters: UserFilters;
 }) {
     const sortDescriptor = getSortDescriptor(sort);
-    const hasPrevious = users.current_page > 1;
-    const hasNext = users.current_page < users.last_page;
     const [filterValues, setFilterValues] = useState<UserFilters>({
         id: filters.id ?? '',
         name: filters.name ?? '',
@@ -139,11 +138,15 @@ export default function UsersTable({
             query.filter = activeFilters;
         }
 
-        router.get(usersRoute({ query }).url, {}, {
-            preserveScroll: true,
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            usersRoute({ query }).url,
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                replace: true,
+            },
+        );
         setIsFilterOpen(false);
     };
 
@@ -305,8 +308,9 @@ export default function UsersTable({
                                             type="date"
                                             value={
                                                 verificationStatus === 'any'
-                                                    ? filterValues.email_verified_at ?? ''
-                                                : ''
+                                                    ? (filterValues.email_verified_at ??
+                                                      '')
+                                                    : ''
                                             }
                                             onChange={(event) =>
                                                 setFilterValues({
@@ -327,7 +331,9 @@ export default function UsersTable({
                                         <Input
                                             id="filter-created-at"
                                             type="date"
-                                            value={filterValues.created_at ?? ''}
+                                            value={
+                                                filterValues.created_at ?? ''
+                                            }
                                             onChange={(event) =>
                                                 setFilterValues({
                                                     ...filterValues,
@@ -347,7 +353,9 @@ export default function UsersTable({
                                         <Input
                                             id="filter-posts"
                                             type="number"
-                                            value={filterValues.posts_count ?? ''}
+                                            value={
+                                                filterValues.posts_count ?? ''
+                                            }
                                             onChange={(event) =>
                                                 setFilterValues({
                                                     ...filterValues,
@@ -367,7 +375,10 @@ export default function UsersTable({
                                         <Input
                                             id="filter-comments"
                                             type="number"
-                                            value={filterValues.comments_count ?? ''}
+                                            value={
+                                                filterValues.comments_count ??
+                                                ''
+                                            }
                                             onChange={(event) =>
                                                 setFilterValues({
                                                     ...filterValues,
@@ -380,9 +391,7 @@ export default function UsersTable({
                                 </div>
                             </div>
                             <SheetFooter>
-                                <Button
-                                    onClick={submitFilters}
-                                >
+                                <Button onClick={submitFilters}>
                                     Apply filters
                                 </Button>
                             </SheetFooter>
@@ -395,8 +404,8 @@ export default function UsersTable({
                 aria-label="Users table"
                 sortDescriptor={sortDescriptor}
                 onSortChange={(descriptor) => navigate(1, descriptor)}
-                onRowAction={(key) => {
-                    router.get(`/users/${key}/edit`, {}, { preserveScroll: true });
+                onRowAction={(userId) => {
+                    router.visit(edit(userId as unknown as number))
                 }}
                 selectionMode="none"
             >

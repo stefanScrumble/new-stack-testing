@@ -7,6 +7,7 @@ import { users as usersRoute } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import {create} from '@/actions/App/Http/Controllers/UserController'
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -28,12 +29,9 @@ export default function UsersIndex({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Users" />
             <div className="flex flex-1 flex-col gap-4">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-xl font-semibold text-foreground">
-                        Users
-                    </h1>
+                <div className="flex items-center justify-end">
                     <Button asChild>
-                        <Link href="/users/create">Create user</Link>
+                        <Link href={create()}>Create user</Link>
                     </Button>
                 </div>
                 <UsersTable users={users} sort={sort} filters={filters} />

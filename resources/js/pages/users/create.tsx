@@ -17,56 +17,45 @@ export default function CreateUserPage() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create user" />
-            <div className="flex flex-1 flex-col items-start gap-8 px-4 pb-8 md:px-6">
-                <div className="space-y-1">
-                    <h1 className="text-2xl font-semibold text-foreground">
-                        Create user
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                        Add a new user to the workspace.
-                    </p>
-                </div>
-
-                <Form
-                    method="post"
-                    action={store()}
-                    className="w-full max-w-3xl space-y-6"
-                >
-                    {({ errors, processing }) => (
-                        <>
-                            <FieldGroup className="grid gap-6 md:grid-cols-2">
-                                <FormField
-                                    label="Name"
-                                    name="name"
-                                    autoComplete="name"
-                                    required
-                                    error={errors.name}
-                                />
-                                <FormField
-                                    label="Email"
-                                    name="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    required
-                                    error={errors.email}
-                                />
-                            </FieldGroup>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <Button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="min-w-[120px]"
-                                >
-                                    {processing ? 'Creating...' : 'Create user'}
-                                </Button>
-                                <Button asChild variant="outline">
-                                    <Link href={usersRoute().url}>Cancel</Link>
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-            </div>
+            <Form
+                method="post"
+                action={store()}
+                className="w-full max-w-3xl space-y-6"
+            >
+                {({ errors, processing }) => (
+                    <>
+                        <FieldGroup className="grid gap-6 md:grid-cols-2">
+                            <FormField
+                                label="Name"
+                                name="name"
+                                autoComplete="name"
+                                required
+                                error={errors.name}
+                            />
+                            <FormField
+                                label="Email"
+                                name="email"
+                                type="email"
+                                autoComplete="email"
+                                required
+                                error={errors.email}
+                            />
+                        </FieldGroup>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="min-w-[120px]"
+                            >
+                                {processing ? 'Creating...' : 'Create user'}
+                            </Button>
+                            <Button asChild variant="outline">
+                                <Link href={usersRoute().url}>Cancel</Link>
+                            </Button>
+                        </div>
+                    </>
+                )}
+            </Form>
         </AppLayout>
     );
 }
